@@ -10,17 +10,20 @@ export function useFileDrop({ onFile, accept }: UseFileDropOptions) {
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
   }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       setIsDragging(false);
       const file = e.dataTransfer.files[0];
       if (file) onFile(file);
@@ -31,7 +34,10 @@ export function useFileDrop({ onFile, accept }: UseFileDropOptions) {
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) onFile(file);
+      if (file) {
+        onFile(file);
+        e.target.value = "";
+      }
     },
     [onFile]
   );

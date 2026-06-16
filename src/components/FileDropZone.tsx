@@ -3,7 +3,9 @@ import { useFileDrop } from "../hooks/useFileDrop";
 import type { QuizMode } from "../types/mcq";
 
 interface FileDropZoneProps {
+  selectedFile: File | null;
   onFileSelect: (file: File) => void;
+  onClearFile: () => void;
   pastedText: string;
   onTextChange: (text: string) => void;
   mode: QuizMode;
@@ -13,10 +15,13 @@ interface FileDropZoneProps {
   onSubmit: () => void;
   isLoading: boolean;
   error: string | null;
+  statusMessage: string | null;
 }
 
 export function FileDropZone({
+  selectedFile,
   onFileSelect,
+  onClearFile,
   pastedText,
   onTextChange,
   mode,
@@ -26,6 +31,7 @@ export function FileDropZone({
   onSubmit,
   isLoading,
   error,
+  statusMessage,
 }: FileDropZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { isDragging, dropProps, inputProps } = useFileDrop({
@@ -63,7 +69,34 @@ export function FileDropZone({
         </div>
         <p className="text-lg font-medium">Drag & drop your file here</p>
         <p className="mt-1 text-sm text-indigo-300/60">PDF, DOCX, DOC, or TXT — up to 10 MB</p>
+        {selectedFile && !isLoading && (
+          <p className="mt-3 text-sm font-medium text-emerald-300">
+            Ready: {selectedFile.name}
+          </p>
+        )}
       </div>
+
+      {statusMessage && isLoading && (
+        <div className="rounded-xl border border-indigo-400/30 bg-indigo-500/10 px-4 py-3 text-sm text-indigo-200">
+          {statusMessage}
+        </div>
+      )}
+
+      {selectedFile && !isLoading && (
+        <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm">
+          <span className="text-emerald-200">
+            <span className="font-medium">{selectedFile.name}</span>
+            <span className="text-emerald-300/70"> ({Math.round(selectedFile.size / 1024)} KB)</span>
+          </span>
+          <button
+            type="button"
+            onClick={onClearFile}
+            className="text-emerald-300/70 hover:text-emerald-200"
+          >
+            Remove
+          </button>
+        </div>
+      )}
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
