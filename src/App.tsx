@@ -4,9 +4,11 @@ import { FileDropZone } from "./components/FileDropZone";
 import { QuizSession } from "./components/QuizSession";
 import { ScoreSummary } from "./components/ScoreSummary";
 import { uploadContent, submitQuiz } from "./api/client";
+import { useLanguage } from "./context/LanguageContext";
 import type { AppPhase, McqQuestion, QuizMode, QuizResult, UserAnswer } from "./types/mcq";
 
 export default function App() {
+  const { t, format } = useLanguage();
   const [phase, setPhase] = useState<AppPhase>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [pastedText, setPastedText] = useState("");
@@ -24,7 +26,7 @@ export default function App() {
     const uploadFile = fileOverride ?? file;
 
     if (!uploadFile && !pastedText.trim()) {
-      setError("Please upload a file or paste MCQ text");
+      setError(t.upload.errorNoContent);
       setStatusMessage(null);
       return;
     }
@@ -32,7 +34,9 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     setStatusMessage(
-      uploadFile ? `Processing ${uploadFile.name}...` : "Processing your quiz..."
+      uploadFile
+        ? format(t.upload.processingFile, { name: uploadFile.name })
+        : t.upload.processingQuiz
     );
 
     try {
@@ -48,7 +52,7 @@ export default function App() {
       setStatusMessage(null);
       setPhase("quiz");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to process content");
+      setError(err instanceof Error ? err.message : t.upload.errorProcess);
       setStatusMessage(null);
     } finally {
       setIsLoading(false);
@@ -58,7 +62,7 @@ export default function App() {
   const handleFileSelect = (selected: File) => {
     setFile(selected);
     setError(null);
-    setStatusMessage(`Selected: ${selected.name}`);
+    setStatusMessage(format(t.upload.selectedFile, { name: selected.name }));
     void handleSubmit(selected);
   };
 
@@ -77,7 +81,7 @@ export default function App() {
       setResult(quizResult);
       setPhase("results");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit quiz");
+      setError(err instanceof Error ? err.message : t.quiz.errorSubmit);
       setPhase("upload");
     } finally {
       setIsSubmitting(false);
@@ -96,7 +100,7 @@ export default function App() {
   };
 
   return (
-    <Layout>
+    <Layout phase={phase}>
       {phase === "upload" && (
         <FileDropZone
           selectedFile={file}
@@ -124,10 +128,10 @@ export default function App() {
       )}
 
       {phase === "quiz" && questions.length === 0 && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-          No questions were loaded.{" "}
+        <div className="alert-error">
+          {t.quiz.noQuestions}{" "}
           <button type="button" onClick={handleRestart} className="underline">
-            Try again
+            {t.quiz.tryAgain}
           </button>
         </div>
       )}

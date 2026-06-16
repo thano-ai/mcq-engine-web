@@ -1,6 +1,13 @@
-# MCQ Engine Web
+# QuizCard Web
 
-React + Vite + Tailwind frontend for the MCQ Engine. Upload test banks, practice with flipable flashcards, and review your score.
+React + Vite frontend for QuizCard — an AI-driven MCQ study app built on the **Core Intelligence** design system.
+
+## Design
+
+- Dark-first UI with electric green (`#4edea3`) accents
+- Inter + Geist typography
+- Glassmorphic cards, segmented toggles, and bottom navigation
+- See `../DESIGN.md` for full tokens and [Stitch prototype](https://stitch.withgoogle.com/preview/1448183802800799043?node-id=fefc0b1e4537487db660a031ee855921)
 
 ## Features
 

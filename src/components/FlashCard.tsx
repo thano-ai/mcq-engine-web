@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import type { McqQuestion, UserAnswer } from "../types/mcq";
 
 interface FlashCardProps {
@@ -10,6 +11,14 @@ interface FlashCardProps {
   isLast: boolean;
 }
 
+function getOptionLetter(option: string): string {
+  return option.trim().charAt(0).toUpperCase();
+}
+
+function getOptionText(option: string): string {
+  return option.replace(/^[A-Ea-e][.)]\s*/, "").trim();
+}
+
 export function FlashCard({
   question,
   index,
@@ -18,6 +27,7 @@ export function FlashCard({
   onNext,
   isLast,
 }: FlashCardProps) {
+  const { t } = useLanguage();
   const [selected, setSelected] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -36,99 +46,89 @@ export function FlashCard({
     onNext();
   };
 
-  const getOptionLetter = (option: string) => option.trim().charAt(0).toUpperCase();
+  const progress = ((index + 1) / total) * 100;
 
   return (
-    <div className="animate-slide-in space-y-6">
-      <div className="flex items-center justify-between text-sm text-indigo-300/70">
-        <span>
-          Question {index + 1} of {total}
+    <div className="page-quiz animate-slide-in">
+      <div className="quiz-progress">
+        <span className="quiz-progress-label">
+          {index + 1} <span className="text-[var(--color-outline)]">/</span> {total}
         </span>
-        <div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-indigo-400 transition-all duration-500"
-            style={{ width: `${((index + 1) / total) * 100}%` }}
-          />
+        <div className="progress-track flex-1">
+          <div className="progress-fill" style={{ width: `${progress}%` }} />
         </div>
       </div>
 
-      <div className="perspective-[1200px]">
-        <div
-          className={`card-flip relative min-h-[320px] w-full ${isFlipped ? "flipped" : ""}`}
-          onClick={() => setIsFlipped(!isFlipped)}
-        >
-          <div className="card-face card-front rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-8 shadow-2xl backdrop-blur-sm">
-            <button
-              type="button"
-              className="absolute right-4 top-4 rounded-lg bg-white/10 px-2 py-1 text-xs text-indigo-300/70 hover:bg-white/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsFlipped(true);
-              }}
+      <div className="quiz-body">
+        <div className="quiz-question-col">
+          <div className="perspective-[1200px]">
+            <div
+              className={`card-flip relative w-full ${isFlipped ? "flipped" : ""}`}
+              onClick={() => setIsFlipped(!isFlipped)}
             >
-              Flip for hint
-            </button>
-            <p className="font-display text-xl font-semibold leading-relaxed">{question.question}</p>
-            <p className="mt-4 text-xs text-indigo-300/50">Click card to flip</p>
-          </div>
+              <div className="card-face card-front question-card">
+                <button
+                  type="button"
+                  className="hint-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsFlipped(true);
+                  }}
+                >
+                  {t.quiz.hint}
+                </button>
+                <p className="question-text">{question.question}</p>
+              </div>
 
-          <div className="card-face card-back rounded-2xl border border-indigo-400/30 bg-gradient-to-br from-indigo-500/20 to-violet-500/10 p-8 shadow-2xl backdrop-blur-sm">
-            <p className="text-sm font-medium text-indigo-300">Study Tip</p>
-            <p className="mt-3 text-indigo-100/80">
-              Read each option carefully. Eliminate obviously wrong answers first, then compare the
-              remaining choices against key concepts in the question.
-            </p>
-            <button
-              type="button"
-              className="mt-6 text-sm text-indigo-400 hover:text-indigo-300"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsFlipped(false);
-              }}
-            >
-              ← Back to question
-            </button>
+              <div className="card-face card-back question-card question-card--hint">
+                <p className="hint-label">{t.quiz.tip}</p>
+                <p className="hint-text">{t.quiz.hintText}</p>
+                <button
+                  type="button"
+                  className="hint-back"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsFlipped(false);
+                  }}
+                >
+                  {t.quiz.back}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
+        <div className="quiz-options-col">
+          <div className="options-list">
+            {question.options.map((option) => {
+              const letter = getOptionLetter(option);
+              const text = getOptionText(option);
+              const isSelected = selected === letter;
+
+              return (
+                <button
+                  key={letter}
+                  type="button"
+                  disabled={revealed}
+                  onClick={() => handleSelect(letter)}
+                  className={`mcq-option ${revealed && isSelected ? "selected" : ""}`}
+                >
+                  <span className="mcq-option-letter">{letter}</span>
+                  <span>{text}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {revealed && (
+            <div className="page-actions">
+              <button type="button" className="btn-primary animate-fade-in" onClick={handleNext}>
+                {isLast ? t.quiz.seeResults : t.quiz.nextQuestion}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-
-      <div
-        className={`space-y-3 transition-all duration-500 ${revealed ? "" : "animate-fade-in-delay"}`}
-      >
-        {question.options.map((option) => {
-          const letter = getOptionLetter(option);
-          const isSelected = selected === letter;
-
-          let optionClass = "border-white/10 bg-white/5 hover:border-indigo-400/50 hover:bg-white/10";
-          if (revealed && isSelected) {
-            optionClass = "border-indigo-400 bg-indigo-500/30 glow-correct";
-          }
-
-          return (
-            <button
-              key={letter}
-              type="button"
-              disabled={revealed}
-              onClick={() => handleSelect(letter)}
-              className={`w-full rounded-xl border p-4 text-left transition-all duration-200 ${optionClass} ${
-                revealed ? "cursor-default" : "cursor-pointer"
-              } ${revealed && isSelected ? "glow-correct" : ""}`}
-            >
-              <span className="text-sm leading-relaxed">{option}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {revealed && (
-        <button
-          type="button"
-          onClick={handleNext}
-          className="w-full rounded-xl bg-indigo-500 py-3.5 font-semibold shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-400 animate-fade-in"
-        >
-          {isLast ? "See Results" : "Next Question →"}
-        </button>
-      )}
     </div>
   );
 }
