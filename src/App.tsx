@@ -3,15 +3,18 @@ import { Layout } from "./components/Layout";
 import { FileDropZone } from "./components/FileDropZone";
 import { QuizSession } from "./components/QuizSession";
 import { ScoreSummary } from "./components/ScoreSummary";
+import { SettingsPage } from "./components/SettingsPage";
 import { uploadContent, submitQuiz } from "./api/client";
 import { useLanguage } from "./context/LanguageContext";
 import type {
   AppPhase,
+  DashboardView,
   InputMode,
   OpenCommandWord,
   QuizMode,
   QuizQuestion,
   QuizResult,
+  SidebarNavTarget,
   UserAnswer,
 } from "./types/mcq";
 
@@ -22,17 +25,31 @@ const DEFAULT_OPEN_TYPES: OpenCommandWord[] = [
   "enhance",
 ];
 
+const DEFAULT_INPUT_MODE_KEY = "quizcard-default-input-mode";
+const DEFAULT_QUIZ_MODE_KEY = "quizcard-default-quiz-mode";
+
+function readStoredInputMode(): InputMode {
+  const stored = localStorage.getItem(DEFAULT_INPUT_MODE_KEY);
+  return stored === "generate" ? "generate" : "extract";
+}
+
+function readStoredQuizMode(): QuizMode {
+  const stored = localStorage.getItem(DEFAULT_QUIZ_MODE_KEY);
+  return stored === "random" ? "random" : "all";
+}
+
 export default function App() {
   const { t, format } = useLanguage();
   const [phase, setPhase] = useState<AppPhase>("upload");
+  const [dashboardView, setDashboardView] = useState<DashboardView>("home");
   const [file, setFile] = useState<File | null>(null);
   const [pastedText, setPastedText] = useState("");
-  const [inputMode, setInputMode] = useState<InputMode>("extract");
+  const [inputMode, setInputMode] = useState<InputMode>(readStoredInputMode);
   const [generateCount, setGenerateCount] = useState(10);
   const [includeMcq, setIncludeMcq] = useState(true);
   const [includeOpen, setIncludeOpen] = useState(true);
   const [openTypes, setOpenTypes] = useState<OpenCommandWord[]>(DEFAULT_OPEN_TYPES);
-  const [mode, setMode] = useState<QuizMode>("all");
+  const [mode, setMode] = useState<QuizMode>(readStoredQuizMode);
   const [sampleSize, setSampleSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,14 +60,39 @@ export default function App() {
   const [result, setResult] = useState<QuizResult | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
+  const handleDefaultInputModeChange = (next: InputMode) => {
+    setInputMode(next);
+    localStorage.setItem(DEFAULT_INPUT_MODE_KEY, next);
+  };
+
+  const handleDefaultQuizModeChange = (next: QuizMode) => {
+    setMode(next);
+    localStorage.setItem(DEFAULT_QUIZ_MODE_KEY, next);
+  };
+
+  const handleNav = (target: SidebarNavTarget) => {
+    if (target === "settings") {
+      setDashboardView("settings");
+      return;
+    }
+
+    setDashboardView("home");
+    if (target === "history" && result) {
+      setPhase("results");
+    } else {
+      setPhase("upload");
+    }
+  };
+
   const appendFormFields = (formData: FormData) => {
     formData.append("inputMode", inputMode);
     formData.append("generateCount", String(generateCount));
     formData.append("includeMcq", String(includeMcq));
     formData.append("includeOpen", String(includeOpen));
     formData.append("openTypes", openTypes.join(","));
-    formData.append("mode", mode);
-    if (mode === "random") formData.append("sampleSize", String(sampleSize));
+    const effectiveMode = inputMode === "generate" ? "all" : mode;
+    formData.append("mode", effectiveMode);
+    if (effectiveMode === "random") formData.append("sampleSize", String(sampleSize));
   };
 
   const handleSubmit = async (fileOverride?: File) => {
@@ -128,6 +170,7 @@ export default function App() {
 
   const handleRestart = () => {
     setPhase("upload");
+    setDashboardView("home");
     setFile(null);
     setPastedText("");
     setSessionId(null);
@@ -145,8 +188,23 @@ export default function App() {
   };
 
   return (
-    <Layout phase={phase} onCreateQuiz={phase === "results" ? handleRestart : undefined}>
-      {phase === "upload" && (
+    <Layout
+      phase={phase}
+      dashboardView={dashboardView}
+      onNav={handleNav}
+      hasResults={result !== null}
+      onCreateQuiz={phase === "results" ? handleRestart : undefined}
+    >
+      {dashboardView === "settings" && phase !== "quiz" && (
+        <SettingsPage
+          defaultInputMode={inputMode}
+          onDefaultInputModeChange={handleDefaultInputModeChange}
+          defaultQuizMode={mode}
+          onDefaultQuizModeChange={handleDefaultQuizModeChange}
+        />
+      )}
+
+      {phase === "upload" && dashboardView === "home" && (
         <FileDropZone
           selectedFile={file}
           onFileSelect={handleFileSelect}
@@ -192,7 +250,7 @@ export default function App() {
         </div>
       )}
 
-      {phase === "results" && result && (
+      {phase === "results" && dashboardView === "home" && result && (
         <ScoreSummary result={result} elapsedSeconds={elapsedSeconds} onRestart={handleRestart} />
       )}
     </Layout>

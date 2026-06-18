@@ -212,29 +212,32 @@ export function FileDropZone({
                 </div>
               )}
 
-              <div className="stepper-row">
-                <span className="stepper-label">{t.upload.generateCount}</span>
-                <div className="stepper">
-                  <button
-                    type="button"
-                    className="stepper-btn"
-                    onClick={() => onGenerateCountChange(Math.max(3, generateCount - 1))}
-                  >
-                    −
-                  </button>
-                  <span className="stepper-value">{generateCount}</span>
-                  <button
-                    type="button"
-                    className="stepper-btn"
-                    onClick={() => onGenerateCountChange(Math.min(30, generateCount + 1))}
-                  >
-                    +
-                  </button>
+              <div className="settings-block">
+                <div className="stepper-row">
+                  <span className="stepper-label">{t.upload.generateCount}</span>
+                  <div className="stepper">
+                    <button
+                      type="button"
+                      className="stepper-btn"
+                      onClick={() => onGenerateCountChange(Math.max(3, generateCount - 1))}
+                    >
+                      −
+                    </button>
+                    <span className="stepper-value">{generateCount}</span>
+                    <button
+                      type="button"
+                      className="stepper-btn"
+                      onClick={() => onGenerateCountChange(Math.min(30, generateCount + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
           )}
 
+          {!isGenerate && (
           <div className="settings-block">
             <p className="settings-label">{t.upload.quizMode}</p>
             <div className="segmented-track">
@@ -279,6 +282,7 @@ export function FileDropZone({
               </div>
             )}
           </div>
+          )}
 
           {error && <div className="alert-error">{error}</div>}
 

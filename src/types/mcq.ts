@@ -50,6 +50,10 @@ export type QuizMode = "all" | "random";
 
 export type AppPhase = "upload" | "quiz" | "results";
 
+export type DashboardView = "home" | "settings";
+
+export type SidebarNavTarget = "dashboard" | "history" | "settings";
+
 export interface UserAnswer {
   questionId: number;
   selected: string;

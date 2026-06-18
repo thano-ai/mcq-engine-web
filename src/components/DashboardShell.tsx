@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
-import type { AppPhase } from "../types/mcq";
+import type { AppPhase, DashboardView } from "../types/mcq";
 import { MaterialIcon } from "./MaterialIcon";
 
 interface DashboardShellProps {
   children: ReactNode;
   phase: AppPhase;
+  dashboardView: DashboardView;
+  onNav: (target: "dashboard" | "history" | "settings") => void;
+  hasResults: boolean;
   onCreateQuiz?: () => void;
 }
 
@@ -41,16 +44,49 @@ function LanguageToggle() {
   );
 }
 
-export function DashboardShell({ children, phase, onCreateQuiz }: DashboardShellProps) {
+export function DashboardShell({
+  children,
+  phase,
+  dashboardView,
+  onNav,
+  hasResults,
+  onCreateQuiz,
+}: DashboardShellProps) {
   const { t } = useLanguage();
-  const isResults = phase === "results";
 
   const sidebarNav = [
-    { id: "dashboard", icon: "dashboard", label: t.nav.dashboard, active: !isResults },
-    { id: "history", icon: "history", label: t.nav.history, active: isResults },
-    { id: "analytics", icon: "analytics", label: t.nav.analytics, active: false },
-    { id: "settings", icon: "settings", label: t.nav.settings, active: false },
+    {
+      id: "home" as const,
+      icon: "dashboard",
+      label: t.nav.dashboard,
+      active: dashboardView === "home" && phase === "upload",
+    },
+    {
+      id: "history" as const,
+      icon: "history",
+      label: t.nav.history,
+      active: dashboardView === "home" && phase === "results",
+      disabled: !hasResults,
+    },
+    {
+      id: "settings" as const,
+      icon: "settings",
+      label: t.nav.settings,
+      active: dashboardView === "settings",
+    },
   ];
+
+  const handleNav = (id: "home" | "history" | "settings") => {
+    if (id === "settings") {
+      onNav("settings");
+      return;
+    }
+    if (id === "history" && hasResults) {
+      onNav("history");
+      return;
+    }
+    onNav("dashboard");
+  };
 
   return (
     <div className="dash-shell">
@@ -62,14 +98,17 @@ export function DashboardShell({ children, phase, onCreateQuiz }: DashboardShell
 
         <nav className="dash-sidebar-nav" aria-label="Sidebar">
           {sidebarNav.map((item) => (
-            <div
+            <button
               key={item.id}
-              className={`dash-sidebar-link ${item.active ? "active" : ""}`}
+              type="button"
+              disabled={"disabled" in item && item.disabled}
+              className={`dash-sidebar-link ${item.active ? "active" : ""} ${"disabled" in item && item.disabled ? "disabled" : ""}`}
               aria-current={item.active ? "page" : undefined}
+              onClick={() => handleNav(item.id)}
             >
               <MaterialIcon name={item.icon} />
               <span>{item.label}</span>
-            </div>
+            </button>
           ))}
         </nav>
 
@@ -79,17 +118,23 @@ export function DashboardShell({ children, phase, onCreateQuiz }: DashboardShell
               {t.upload.createQuiz}
             </button>
           )}
-          <div className="dash-sidebar-link muted">
+          <button
+            type="button"
+            className="dash-sidebar-link muted"
+            onClick={() => handleNav("settings")}
+          >
             <MaterialIcon name="help" />
             <span>{t.nav.help}</span>
-          </div>
+          </button>
         </div>
       </aside>
 
       <div className="dash-main-wrap">
         <header className="dash-topbar">
           <nav className="dash-topbar-nav" aria-label="Breadcrumb">
-            <span className="dash-topbar-link">{t.nav.dashboard}</span>
+            <span className="dash-topbar-link">
+              {dashboardView === "settings" ? t.nav.settings : t.nav.dashboard}
+            </span>
             <span className="dash-topbar-link active">{t.nav.workspaces}</span>
           </nav>
           <div className="dash-topbar-actions">
