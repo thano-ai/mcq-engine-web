@@ -2,7 +2,16 @@ import { useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import { useFileDrop } from "../hooks/useFileDrop";
 import { MaterialIcon } from "./MaterialIcon";
-import type { QuizMode } from "../types/mcq";
+import type { InputMode, OpenCommandWord, QuizMode } from "../types/mcq";
+
+const OPEN_TYPES: OpenCommandWord[] = [
+  "apply",
+  "develop",
+  "justify",
+  "enhance",
+  "analyze",
+  "evaluate",
+];
 
 interface FileDropZoneProps {
   selectedFile: File | null;
@@ -10,6 +19,16 @@ interface FileDropZoneProps {
   onClearFile: () => void;
   pastedText: string;
   onTextChange: (text: string) => void;
+  inputMode: InputMode;
+  onInputModeChange: (mode: InputMode) => void;
+  generateCount: number;
+  onGenerateCountChange: (count: number) => void;
+  includeMcq: boolean;
+  onIncludeMcqChange: (value: boolean) => void;
+  includeOpen: boolean;
+  onIncludeOpenChange: (value: boolean) => void;
+  openTypes: OpenCommandWord[];
+  onOpenTypesChange: (types: OpenCommandWord[]) => void;
   mode: QuizMode;
   onModeChange: (mode: QuizMode) => void;
   sampleSize: number;
@@ -26,6 +45,16 @@ export function FileDropZone({
   onClearFile,
   pastedText,
   onTextChange,
+  inputMode,
+  onInputModeChange,
+  generateCount,
+  onGenerateCountChange,
+  includeMcq,
+  onIncludeMcqChange,
+  includeOpen,
+  onIncludeOpenChange,
+  openTypes,
+  onOpenTypesChange,
   mode,
   onModeChange,
   sampleSize,
@@ -41,6 +70,16 @@ export function FileDropZone({
     onFile: onFileSelect,
   });
 
+  const isGenerate = inputMode === "generate";
+
+  const toggleOpenType = (word: OpenCommandWord) => {
+    if (openTypes.includes(word)) {
+      onOpenTypesChange(openTypes.filter((w) => w !== word));
+    } else {
+      onOpenTypesChange([...openTypes, word]);
+    }
+  };
+
   return (
     <div className="home-page animate-fade-in">
       <div className="home-ambient home-ambient--left" aria-hidden="true" />
@@ -49,11 +88,13 @@ export function FileDropZone({
       <header className="home-header">
         <div>
           <h2 className="home-display">{t.upload.heroTitle}</h2>
-          <p className="home-subtitle">{t.upload.subtitle}</p>
+          <p className="home-subtitle">
+            {isGenerate ? t.upload.generateHint : t.upload.subtitle}
+          </p>
         </div>
         <span className="home-badge">
           <MaterialIcon name="auto_awesome" className="text-sm" />
-          {t.upload.aiPowered}
+          {isGenerate ? t.upload.generateMode : t.upload.aiPowered}
         </span>
       </header>
 
@@ -66,7 +107,7 @@ export function FileDropZone({
           >
             <input ref={inputRef} {...inputProps} />
             <div className="home-drop-icon">
-              <MaterialIcon name="upload_file" />
+              <MaterialIcon name={isGenerate ? "psychology" : "upload_file"} />
             </div>
             <div>
               <p className="home-drop-title">{t.upload.dropTitle}</p>
@@ -102,14 +143,97 @@ export function FileDropZone({
             id="mcq-text"
             value={pastedText}
             onChange={(e) => onTextChange(e.target.value)}
-            placeholder={t.upload.placeholder}
+            placeholder={isGenerate ? t.upload.contentPlaceholder : t.upload.placeholder}
             className="textarea-input"
-            rows={8}
+            rows={isGenerate ? 10 : 8}
           />
         </section>
 
         <aside className="glass-panel home-settings-panel">
           <h3 className="home-panel-title">{t.upload.title}</h3>
+
+          <div className="settings-block">
+            <p className="settings-label">{t.upload.inputMode}</p>
+            <div className="segmented-track">
+              <button
+                type="button"
+                className={`segmented-option ${inputMode === "extract" ? "active" : ""}`}
+                onClick={() => onInputModeChange("extract")}
+              >
+                {t.upload.extractMode}
+              </button>
+              <button
+                type="button"
+                className={`segmented-option ${inputMode === "generate" ? "active" : ""}`}
+                onClick={() => onInputModeChange("generate")}
+              >
+                {t.upload.generateMode}
+              </button>
+            </div>
+          </div>
+
+          {isGenerate && (
+            <>
+              <div className="settings-block">
+                <p className="settings-label">{t.upload.questionTypes}</p>
+                <label className="type-check">
+                  <input
+                    type="checkbox"
+                    checked={includeMcq}
+                    onChange={(e) => onIncludeMcqChange(e.target.checked)}
+                  />
+                  <span>{t.upload.typeMcq}</span>
+                </label>
+                <label className="type-check">
+                  <input
+                    type="checkbox"
+                    checked={includeOpen}
+                    onChange={(e) => onIncludeOpenChange(e.target.checked)}
+                  />
+                  <span>{t.upload.typeOpen}</span>
+                </label>
+              </div>
+
+              {includeOpen && (
+                <div className="settings-block">
+                  <p className="settings-label">{t.upload.openTypes}</p>
+                  <div className="type-chips">
+                    {OPEN_TYPES.map((word) => (
+                      <button
+                        key={word}
+                        type="button"
+                        className={`type-chip ${openTypes.includes(word) ? "active" : ""}`}
+                        onClick={() => toggleOpenType(word)}
+                      >
+                        {t.quiz.commands[word]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="stepper-row">
+                <span className="stepper-label">{t.upload.generateCount}</span>
+                <div className="stepper">
+                  <button
+                    type="button"
+                    className="stepper-btn"
+                    onClick={() => onGenerateCountChange(Math.max(3, generateCount - 1))}
+                  >
+                    −
+                  </button>
+                  <span className="stepper-value">{generateCount}</span>
+                  <button
+                    type="button"
+                    className="stepper-btn"
+                    onClick={() => onGenerateCountChange(Math.min(30, generateCount + 1))}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="settings-block">
             <p className="settings-label">{t.upload.quizMode}</p>
@@ -165,11 +289,11 @@ export function FileDropZone({
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                {t.upload.processing}
+                {isGenerate ? t.upload.generating : t.upload.processing}
               </>
             ) : (
               <>
-                <MaterialIcon name="play_arrow" />
+                <MaterialIcon name={isGenerate ? "auto_awesome" : "play_arrow"} />
                 {t.upload.generateQuiz}
               </>
             )}

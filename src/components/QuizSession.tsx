@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import { useQuizTimer } from "../hooks/useQuizTimer";
-import { FlashCard } from "./FlashCard";
-import type { McqQuestion, UserAnswer } from "../types/mcq";
+import { QuestionCard } from "./QuestionCard";
+import type { QuizQuestion, UserAnswer } from "../types/mcq";
 
 interface QuizSessionProps {
-  questions: McqQuestion[];
+  questions: QuizQuestion[];
   onComplete: (answers: UserAnswer[], elapsedSeconds: number) => void;
   onExit: () => void;
   isSubmitting: boolean;
@@ -59,7 +59,7 @@ export function QuizSession({
   }
 
   return (
-    <FlashCard
+    <QuestionCard
       key={questions[currentIndex].id}
       question={questions[currentIndex]}
       index={currentIndex}

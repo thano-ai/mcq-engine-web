@@ -1320,6 +1320,112 @@ body {
 .spinner { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.quiz-tag--secondary {
+  color: var(--color-secondary);
+  background: rgba(192, 193, 255, 0.1);
+  border: 1px solid rgba(192, 193, 255, 0.2);
+}
+
+.open-question-hint {
+  margin: 12px 0 0;
+  font-size: 0.9375rem;
+  color: var(--color-on-surface-variant);
+}
+
+.open-answer-area {
+  padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.open-answer-input {
+  width: 100%;
+  min-height: 160px;
+  padding: 18px 20px;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--color-on-surface);
+  background: rgba(34, 42, 61, 0.5);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 12px;
+  resize: vertical;
+}
+
+.open-answer-input:focus {
+  outline: none;
+  border-color: rgba(78, 222, 163, 0.4);
+}
+
+.open-submit-btn { align-self: flex-start; }
+
+.open-submitted-note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-primary);
+}
+
+.type-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9375rem;
+  color: var(--color-on-surface);
+  cursor: pointer;
+}
+
+.type-check input {
+  accent-color: var(--color-primary);
+}
+
+.type-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.type-chip {
+  padding: 6px 12px;
+  font-family: var(--font-label);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+  background: var(--color-surface-container-high);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.type-chip.active {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.result-card-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.result-answer-text {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.result-ai-feedback {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-on-surface-variant);
+  background: rgba(49, 49, 192, 0.1);
+  border-radius: 8px;
+}
+
 /* ─── Responsive dashboard ─── */
 @media (max-width: 768px) {
   .dash-sidebar { display: none; }

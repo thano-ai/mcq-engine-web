@@ -31,6 +31,7 @@ function ReviewCard({
 
   const isCorrect = answer.isCorrect;
   const num = String(index + 1).padStart(2, "0");
+  const isOpen = answer.type === "open";
 
   return (
     <article
@@ -45,6 +46,12 @@ function ReviewCard({
             {num}
           </span>
           <div>
+            <div className="result-card-tags">
+              <span className="quiz-tag quiz-tag--primary">
+                {isOpen ? t.quiz.openEnded : t.quiz.mcq}
+              </span>
+              <span className="quiz-tag">{answer.commandWord}</span>
+            </div>
             <h4 className="result-card-question">{answer.question}</h4>
             <div className={`result-card-status ${isCorrect ? "result-card-status--ok" : "result-card-status--bad"}`}>
               <MaterialIcon
@@ -64,13 +71,21 @@ function ReviewCard({
       <div className="result-answer-grid">
         <div className={`result-answer-box ${isCorrect ? "result-answer-box--yours-ok" : "result-answer-box--yours-bad"}`}>
           <p className="result-answer-label">{t.results.yourAnswer}</p>
-          <p>{answer.selected}</p>
+          <p className="result-answer-text">{answer.selected}</p>
         </div>
         <div className="result-answer-box result-answer-box--correct">
-          <p className="result-answer-label">{t.results.correctAnswer}</p>
-          <p>{answer.correctAnswer}</p>
+          <p className="result-answer-label">
+            {isOpen ? t.results.modelAnswer : t.results.correctAnswer}
+          </p>
+          <p className="result-answer-text">{answer.correctAnswer}</p>
         </div>
       </div>
+
+      {answer.aiFeedback && (
+        <p className="result-ai-feedback">
+          <strong>{t.results.aiFeedback}:</strong> {answer.aiFeedback}
+        </p>
+      )}
 
       {answer.explanation && (
         <div className={`result-explanation ${expanded ? "expanded" : ""}`}>

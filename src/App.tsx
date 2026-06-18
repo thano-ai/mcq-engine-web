@@ -5,13 +5,33 @@ import { QuizSession } from "./components/QuizSession";
 import { ScoreSummary } from "./components/ScoreSummary";
 import { uploadContent, submitQuiz } from "./api/client";
 import { useLanguage } from "./context/LanguageContext";
-import type { AppPhase, McqQuestion, QuizMode, QuizResult, UserAnswer } from "./types/mcq";
+import type {
+  AppPhase,
+  InputMode,
+  OpenCommandWord,
+  QuizMode,
+  QuizQuestion,
+  QuizResult,
+  UserAnswer,
+} from "./types/mcq";
+
+const DEFAULT_OPEN_TYPES: OpenCommandWord[] = [
+  "apply",
+  "develop",
+  "justify",
+  "enhance",
+];
 
 export default function App() {
   const { t, format } = useLanguage();
   const [phase, setPhase] = useState<AppPhase>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [pastedText, setPastedText] = useState("");
+  const [inputMode, setInputMode] = useState<InputMode>("extract");
+  const [generateCount, setGenerateCount] = useState(10);
+  const [includeMcq, setIncludeMcq] = useState(true);
+  const [includeOpen, setIncludeOpen] = useState(true);
+  const [openTypes, setOpenTypes] = useState<OpenCommandWord[]>(DEFAULT_OPEN_TYPES);
   const [mode, setMode] = useState<QuizMode>("all");
   const [sampleSize, setSampleSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,9 +39,19 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<McqQuestion[]>([]);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const appendFormFields = (formData: FormData) => {
+    formData.append("inputMode", inputMode);
+    formData.append("generateCount", String(generateCount));
+    formData.append("includeMcq", String(includeMcq));
+    formData.append("includeOpen", String(includeOpen));
+    formData.append("openTypes", openTypes.join(","));
+    formData.append("mode", mode);
+    if (mode === "random") formData.append("sampleSize", String(sampleSize));
+  };
 
   const handleSubmit = async (fileOverride?: File) => {
     const uploadFile = fileOverride ?? file;
@@ -32,20 +62,26 @@ export default function App() {
       return;
     }
 
+    if (inputMode === "generate" && !includeMcq && (!includeOpen || openTypes.length === 0)) {
+      setError(t.upload.errorNoTypes);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setStatusMessage(
-      uploadFile
-        ? format(t.upload.processingFile, { name: uploadFile.name })
-        : t.upload.processingQuiz
+      inputMode === "generate"
+        ? t.upload.generating
+        : uploadFile
+          ? format(t.upload.processingFile, { name: uploadFile.name })
+          : t.upload.processingQuiz
     );
 
     try {
       const formData = new FormData();
       if (uploadFile) formData.append("file", uploadFile);
       if (pastedText.trim()) formData.append("text", pastedText);
-      formData.append("mode", mode);
-      if (mode === "random") formData.append("sampleSize", String(sampleSize));
+      appendFormFields(formData);
 
       const response = await uploadContent(formData);
       setSessionId(response.sessionId);
@@ -117,6 +153,16 @@ export default function App() {
           onClearFile={handleClearFile}
           pastedText={pastedText}
           onTextChange={setPastedText}
+          inputMode={inputMode}
+          onInputModeChange={setInputMode}
+          generateCount={generateCount}
+          onGenerateCountChange={setGenerateCount}
+          includeMcq={includeMcq}
+          onIncludeMcqChange={setIncludeMcq}
+          includeOpen={includeOpen}
+          onIncludeOpenChange={setIncludeOpen}
+          openTypes={openTypes}
+          onOpenTypesChange={setOpenTypes}
           mode={mode}
           onModeChange={setMode}
           sampleSize={sampleSize}
