@@ -21,6 +21,7 @@ export default function App() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<McqQuestion[]>([]);
   const [result, setResult] = useState<QuizResult | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const handleSubmit = async (fileOverride?: File) => {
     const uploadFile = fileOverride ?? file;
@@ -72,9 +73,10 @@ export default function App() {
     setError(null);
   };
 
-  const handleQuizComplete = async (answers: UserAnswer[]) => {
+  const handleQuizComplete = async (answers: UserAnswer[], seconds: number) => {
     if (!sessionId) return;
 
+    setElapsedSeconds(seconds);
     setIsSubmitting(true);
     try {
       const quizResult = await submitQuiz(sessionId, answers);
@@ -95,12 +97,19 @@ export default function App() {
     setSessionId(null);
     setQuestions([]);
     setResult(null);
+    setElapsedSeconds(0);
     setError(null);
     setStatusMessage(null);
   };
 
+  const handleExitQuiz = () => {
+    if (window.confirm(t.quiz.exitConfirm)) {
+      handleRestart();
+    }
+  };
+
   return (
-    <Layout phase={phase}>
+    <Layout phase={phase} onCreateQuiz={phase === "results" ? handleRestart : undefined}>
       {phase === "upload" && (
         <FileDropZone
           selectedFile={file}
@@ -123,6 +132,7 @@ export default function App() {
         <QuizSession
           questions={questions}
           onComplete={handleQuizComplete}
+          onExit={handleExitQuiz}
           isSubmitting={isSubmitting}
         />
       )}
@@ -137,7 +147,7 @@ export default function App() {
       )}
 
       {phase === "results" && result && (
-        <ScoreSummary result={result} onRestart={handleRestart} />
+        <ScoreSummary result={result} elapsedSeconds={elapsedSeconds} onRestart={handleRestart} />
       )}
     </Layout>
   );

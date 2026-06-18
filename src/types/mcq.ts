@@ -2,6 +2,7 @@ export interface McqQuestion {
   id: number;
   question: string;
   options: string[];
+  correctAnswer?: string;
 }
 
 export interface UploadResponse {

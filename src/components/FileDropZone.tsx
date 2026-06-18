@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import { useFileDrop } from "../hooks/useFileDrop";
+import { MaterialIcon } from "./MaterialIcon";
 import type { QuizMode } from "../types/mcq";
 
 interface FileDropZoneProps {
@@ -41,28 +42,36 @@ export function FileDropZone({
   });
 
   return (
-    <div className="page-upload animate-fade-in">
-      <header className="page-header">
-        <h2 className="page-title">{t.upload.title}</h2>
-        <p className="page-subtitle">{t.upload.subtitle}</p>
+    <div className="home-page animate-fade-in">
+      <div className="home-ambient home-ambient--left" aria-hidden="true" />
+      <div className="home-ambient home-ambient--right" aria-hidden="true" />
+
+      <header className="home-header">
+        <div>
+          <h2 className="home-display">{t.upload.heroTitle}</h2>
+          <p className="home-subtitle">{t.upload.subtitle}</p>
+        </div>
+        <span className="home-badge">
+          <MaterialIcon name="auto_awesome" className="text-sm" />
+          {t.upload.aiPowered}
+        </span>
       </header>
 
-      <div className="page-upload-grid">
-        <div className="page-upload-main">
+      <div className="home-grid">
+        <section className="glass-panel home-upload-panel">
           <div
             {...dropProps}
             onClick={() => inputRef.current?.click()}
-            className={`drop-zone ${isDragging ? "dragging" : ""}`}
+            className={`home-drop-zone ${isDragging ? "dragging" : ""}`}
           >
             <input ref={inputRef} {...inputProps} />
-            <div className="drop-zone-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+            <div className="home-drop-icon">
+              <MaterialIcon name="upload_file" />
             </div>
-            <div className="drop-zone-body">
-              <p className="drop-zone-title">{t.upload.dropTitle}</p>
-              <p className="drop-zone-hint">{t.upload.dropHint}</p>
+            <div>
+              <p className="home-drop-title">{t.upload.dropTitle}</p>
+              <p className="home-drop-hint">{t.upload.dropHint}</p>
+              <p className="home-drop-meta">{t.upload.supportedFormats}</p>
             </div>
           </div>
 
@@ -97,10 +106,12 @@ export function FileDropZone({
             className="textarea-input"
             rows={8}
           />
-        </div>
+        </section>
 
-        <aside className="page-upload-side">
-          <div className="settings-panel">
+        <aside className="glass-panel home-settings-panel">
+          <h3 className="home-panel-title">{t.upload.title}</h3>
+
+          <div className="settings-block">
             <p className="settings-label">{t.upload.quizMode}</p>
             <div className="segmented-track">
               <button
@@ -143,23 +154,26 @@ export function FileDropZone({
                 </div>
               </div>
             )}
-
-            {error && <div className="alert-error">{error}</div>}
-
-            <button type="button" className="btn-primary" onClick={onSubmit} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <svg className="spinner h-5 w-5" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  {t.upload.processing}
-                </>
-              ) : (
-                t.upload.generateQuiz
-              )}
-            </button>
           </div>
+
+          {error && <div className="alert-error">{error}</div>}
+
+          <button type="button" className="btn-primary" onClick={onSubmit} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <svg className="spinner h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {t.upload.processing}
+              </>
+            ) : (
+              <>
+                <MaterialIcon name="play_arrow" />
+                {t.upload.generateQuiz}
+              </>
+            )}
+          </button>
         </aside>
       </div>
     </div>
